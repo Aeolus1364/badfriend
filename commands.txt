@@ -1,0 +1,12 @@
+<>? shift data pointer 	(byte arg)
++-= set cell 		(byte arg)
+:() create function 	(byte arg)
+*   execute function 	(byte arg)
+^   store from cell
+!   use store as arg
+$   output cell
+%   input to cell
+[   jump to ] if cell zero
+]   jump to [ if cell nonzero
+
+
