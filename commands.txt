@@ -1,12 +1,18 @@
-<>? shift data pointer 	(byte arg)
-+-= set cell 		(byte arg)
-:() create function 	(byte arg)
-*   execute function 	(byte arg)
-^   store from cell
-!   use store as arg
-$   output cell
-%   input to cell
-[   jump to ] if cell zero
-]   jump to [ if cell nonzero
+< shift data pointer left	(optional byte arg)
+> shift data pointer right  (optional byte arg)
+? set data pointer          (mandatory byte arg)
++ increment cell 		    (optional byte arg)
+- decrement cell            (optional byte arg)
+= set cell                  (mandatory byte arg)
+: function name 	        (mandatory byte arg)
+( function begin
+) function end
+* execute function 	        (mandatory byte arg)
+^ store from cell
+! use store as arg
+$ output cell
+% input to cell
+[ jump to ] if cell zero
+] jump to [ if cell nonzero
 
-
+commands requiring arguments will be ignored if no arguments are given
