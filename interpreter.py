@@ -1,5 +1,5 @@
 class Interpreter:
-    def __init__(self):
+    def __init__(self, human_mode=False):
         self.command_pointer = 0
         self.cell_pointer = 0
 
@@ -10,7 +10,25 @@ class Interpreter:
 
         self.commands = '>', '<', '?', '+', '-', '=', ':', '(', ')', '*', '^', '!', '$', '%', '[', ']'
 
+        self.life_span = 0
+        self.output = []
+        self.input = []
+
+        self.human_mode = human_mode
+
+    def reset(self):
+        self.command_pointer = 0
+        self.cell_pointer = 0
+        self.store = 0
+        self.active_cell = 0
+        self.data = {}
+        self.life_span = 0
+        self.output = []
+
     def load(self, code):
+        self.reset()
+        self.stream = []
+        code = ''.join(code.split())  # removes formatting
         hex_holder = ''  # limits hex to one byte
         for n, c in enumerate(code):
             if c in self.commands:
@@ -23,7 +41,6 @@ class Interpreter:
                 hex_holder += c
             if len(code) - 1 == n and hex_holder:
                 self.stream.append(int(hex_holder[:2], 16))
-        print(self.stream)
 
     def step(self):
         cmd = self.stream[self.command_pointer]
@@ -74,17 +91,10 @@ class Interpreter:
             self.store = self.active_cell
 
         elif cmd == '$':
-            print(self.active_cell)
+            self.queue_output(self.active_cell)
 
         elif cmd == '%':
-            while True:
-                inp = input('> ')
-                try:
-                    inp = int(inp)
-                    self.set_cell(inp)
-                    break
-                except ValueError:
-                    print("Invalid input")
+            self.set_cell(self.request_input())
 
         elif cmd == '[':
             if self.active_cell == 0:
@@ -116,9 +126,17 @@ class Interpreter:
                         else:  # end at end of stream
                             break
 
-        # print(self.command_pointer, cmd, self.cell_pointer, self.store, self.data)
-
         self.command_pointer += 1
+        self.life_span += 1
+
+    def run(self):
+        self.reset()
+        while self.command_pointer < len(self.stream):
+            if self.life_span < 1000:
+                self.step()
+            else:
+                # print("Lifespan exceeded, terminating")
+                break
 
     def search_arg(self):
         next = self.next_in_stream()
@@ -144,10 +162,34 @@ class Interpreter:
     def set_cell(self, value):
         self.data[self.cell_pointer] = value
 
+    def queue_output(self, out):
+        self.output.append(out)
 
-i = Interpreter()
-i.load('=%>=%-[<2^>2+!<-]>$')
-while i.command_pointer < len(i.stream):
-    i.step()
-# print(i.cell_pointer, i.store, i.data)
+    def dequeue_output(self):
+        if self.output:
+            return self.output.pop(0)
 
+    def dump_output(self):
+        for i in self.output:
+            print(i)
+
+    def set_input(self, inp, *inps):
+        if inps:
+            self.input = list((inp,) + inps)
+        else:
+            self.input = [inp]
+
+    def request_input(self):
+        if self.human_mode:
+            while True:
+                inp = input('> ')
+                try:
+                    inp = int(inp)
+                    return inp
+                except ValueError:
+                    print("Invalid input")
+        else:
+            if self.input:
+                return self.input.pop(0)
+            else:
+                return 0
