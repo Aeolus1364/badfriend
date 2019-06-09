@@ -10,7 +10,7 @@ i = interpreter.Interpreter()
 
 while True:
     stream = ''
-    length = 4
+    length = 20
 
     for k in range(length):
         stream += random.choice(characters + digits)
@@ -18,14 +18,16 @@ while True:
     print("Test", counter)
     print(stream)
     print()
+
     i.load(stream)
 
     success_rate = 0
 
-    for k in range(10):
+    for k in range(3):
         inp = random.randint(0, 10)
-        i.set_input(inp)
-        desired_out = inp + 5
+        inp2 = random.randint(0, 10)
+        i.set_input(inp, inp2)
+        desired_out = inp + inp2
 
         i.run()
         out = i.dequeue_output()
@@ -42,7 +44,5 @@ while True:
     elif stream == "%+5$":
         print("match not registered")
         input()
-
-    counter += 1
-
     print()
+    counter += 1
