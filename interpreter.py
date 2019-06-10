@@ -8,7 +8,7 @@ class Interpreter:
         self.data = {}
         self.stream = []
 
-        self.commands = '>', '<', '?', '+', '-', '=', ':', '(', ')', '*', '^', '!', '$', '%', '[', ']'
+        self.commands = '>', '<', '?', '+', '-', '=', ':', '(', ')', '*', '^', '!', '%', '$', '[', ']'
 
         self.life_span = 0
         self.output = []
@@ -36,7 +36,6 @@ class Interpreter:
                     self.stream.append(int(hex_holder[:2], 16))
                     hex_holder = ''
                 self.stream.append(c)
-
             else:
                 hex_holder += c
             if len(code) - 1 == n and hex_holder:
