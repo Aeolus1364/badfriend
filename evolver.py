@@ -22,11 +22,42 @@ class Evolver:
                 stream += random.choice(self.digits)
         return stream
 
+    def csf(self, str1, str2):
+        len1 = len(str1)
+        len2 = len(str2)
+        counter = [[0] * (len2 + 1) for x in range(len1 + 1)]
+        longest = 0
+        lcs = ''
+        for i in range(1, len1 - 1):
+            for j in range(1, len2 - 1):
+                if str1[i] == str2[j]:
+                    c = counter[i][j] + 1
+                    counter[i + 1][j + 1] = c
+                    if c > longest:
+                        longest = c
+                        lcs = str1[i-c+1:i+1]
+        return lcs
+
+    def crossover(self, a, b, common):
+        x = a.split(common)
+        y = b.split(common)
+        return x[0] + common + y[1]
+
     def test(self):
+        individuals = []
         for i in range(1000):
             t = Individual(self.generate(random.randint(5, 15)))
-            print(t.stream)
-            print(abs(t.num_inputs-self.desired_inputs), abs(t.num_outputs-self.desired_outputs))
+            individuals.append(t)
+
+        for j in range(1000):
+            i1, i2 = random.sample(individuals, 2)
+            i1, i2 = i1.stream, i2.stream
+
+            lcs = self.csf(i1, i2)
+            if len(lcs) > 2:
+                print(self.crossover(i1, i2, lcs), i1, i2)
+            # print(t.stream)
+            # print(abs(t.num_inputs-self.desired_inputs), abs(t.num_outputs-self.desired_outputs))
 
 
 class Individual:
