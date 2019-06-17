@@ -1,7 +1,7 @@
 import interpreter
 
 code = '''
-?^<2B%%+>$<<D6
+%3%[]=7$^=?
 '''
 
 i = interpreter.Interpreter(human_mode=True)

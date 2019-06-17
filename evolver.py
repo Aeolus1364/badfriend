@@ -19,6 +19,7 @@ class Evolver:
 
         self.trials_per_individual = trials
         self.init_gen_limit = limit
+        self.max_fitness = 100
         self.interpreter = Interpreter(max_life_span)
 
     def generate(self, length):  # generates a random stream of given length and frequency
@@ -65,18 +66,31 @@ class Evolver:
 
         self.individuals = self.generations[self.current_gen]
 
+
         for i in self.individuals:  # testing individuals to determine fitness
+            total_error = 0
             if i.num_inputs == self.desired_inputs and i.num_outputs == self.desired_outputs:
                 for j in range(self.trials_per_individual):
-                    input = [random.randint(0, 100) for x in range(2)]
-                    exp_out = input[0] + input[1]
-                    self.interpreter.set_input(input)
+                    inp = [random.randint(0, 100) for x in range(2)]
+                    exp_out = inp[0] + inp[1]
+                    self.interpreter.set_input(inp)
                     self.interpreter.load(i.stream)
                     self.interpreter.run()
                     calc_out = self.interpreter.dequeue_output()
-                    error = abs(calc_out - exp_out)
+                    try:
+                        error = abs(calc_out - exp_out)
+                    except TypeError:
+                        print(i.stream, calc_out)
+                        self.interpreter.dump_output()
+                        input()
+                        break
 
-                    print(f'Error: {error}   Stream: {i.stream}')
+
+                    total_error += error
+                avg_error = total_error / self.trials_per_individual
+                fitness = self.max_fitness / (avg_error + 1)
+
+                print(f'Error: {avg_error} F: {fitness}   Stream: {i.stream}')
 
                 num_des_io += 1
 

@@ -140,7 +140,8 @@ class Interpreter:
     def search_arg(self):
         next = self.next_in_stream()
         if next is not None:
-            if type(next) == int:  # using int in code
+            if type(next) == int:  # using int in code                print(self.data)
+
                 self.command_pointer += 1  # skip over argument
                 return next
             elif next == '!':  # using stored int
