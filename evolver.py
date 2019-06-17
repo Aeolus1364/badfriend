@@ -3,7 +3,7 @@ import random
 
 
 class Evolver:
-    def __init__(self, inps, outs):
+    def __init__(self, inps, outs, gen_size=1000, max_life_span=1000, limit=(5, 15), trials=10):
         self.desired_inputs = inps
         self.desired_outputs = outs
 
@@ -11,6 +11,15 @@ class Evolver:
         self.digits = '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
 
         self.freq_command = 0.75  # frequency of command being chosen as random character
+
+        self.gen_size = gen_size
+        self.generations = []
+        self.individuals = []
+        self.current_gen = 0
+
+        self.trials_per_individual = trials
+        self.init_gen_limit = limit
+        self.interpreter = Interpreter(max_life_span)
 
     def generate(self, length):  # generates a random stream of given length and frequency
         stream = ''
@@ -22,7 +31,7 @@ class Evolver:
                 stream += random.choice(self.digits)
         return stream
 
-    def csf(self, str1, str2):
+    def csf(self, str1, str2):  # common substring finder
         len1 = len(str1)
         len2 = len(str2)
         counter = [[0] * (len2 + 1) for x in range(len1 + 1)]
@@ -43,33 +52,73 @@ class Evolver:
         y = b.split(common)
         return x[0] + common + y[1]
 
-    def test(self):
-        individuals = []
-        for i in range(1000):
-            t = Individual(self.generate(random.randint(5, 15)))
-            individuals.append(t)
+    def run_generation(self):
+        num_des_io = 0
+        total_fitness = 0
 
-        for j in range(1000):
-            i1, i2 = random.sample(individuals, 2)
-            i1, i2 = i1.stream, i2.stream
+        if self.current_gen == 0:  # randomly generates first generation
+            generation = []
+            for i in range(self.gen_size):
+                x = Individual(self.generate(random.randint(self.init_gen_limit[0], self.init_gen_limit[1])), self.desired_inputs, self.desired_outputs)
+                generation.append(x)
+            self.generations.append(generation)
 
-            lcs = self.csf(i1, i2)
-            if len(lcs) > 2:
-                print(self.crossover(i1, i2, lcs), i1, i2)
-            # print(t.stream)
-            # print(abs(t.num_inputs-self.desired_inputs), abs(t.num_outputs-self.desired_outputs))
+        self.individuals = self.generations[self.current_gen]
+
+        for i in self.individuals:  # testing individuals to determine fitness
+            if i.num_inputs == self.desired_inputs and i.num_outputs == self.desired_outputs:
+                for j in range(self.trials_per_individual):
+                    input = [random.randint(0, 100) for x in range(2)]
+                    exp_out = input[0] + input[1]
+                    self.interpreter.set_input(input)
+                    self.interpreter.load(i.stream)
+                    self.interpreter.run()
+                    calc_out = self.interpreter.dequeue_output()
+                    error = abs(calc_out - exp_out)
+
+                    print(f'Error: {error}   Stream: {i.stream}')
+
+                num_des_io += 1
+
+            total_fitness += i.fitness
+
+        # math for displayed stats
+        per_des_io = num_des_io / self.gen_size * 100
+        avg_fitness = total_fitness / self.gen_size
+        print(f"Generation {self.current_gen} {str(round(per_des_io, 2))}%   Avg. Fitness: {round(avg_fitness, 2)}")
+
+        self.current_gen += 1
+        self.generations.append([])
+
+        for j in range(self.gen_size):
+            while True:  # selects 2 different individuals to reproduce
+                pair = random.choices(self.individuals, weights=[x.fitness for x in self.individuals], k=2)
+                a, b = pair[0].stream, pair[1].stream
+                if a != b:
+                    break
+
+            lcs = self.csf(a, b)
+
+            if len(lcs) >= 2:  # crossover occurs if lcs at least 2
+                offspring_stream = self.crossover(a, b, lcs)
+                offspring = Individual(offspring_stream, self.desired_inputs, self.desired_outputs)
+            else:
+                offspring = random.choices(pair, weights=[x.fitness for x in pair])[0]
+
+            self.generations[self.current_gen].append(offspring)  # filling next generation
 
 
 class Individual:
-    def __init__(self, stream):
+    def __init__(self, stream, desired_ins, desired_outs):
         self.stream = stream
 
         self.num_inputs = stream.count('%')
         self.num_outputs = stream.count('$')
 
+        io_diff = abs(desired_ins - self.num_inputs) + abs(desired_outs - self.num_outputs)
+        self.fitness = 1 / (io_diff + 1)
 
 
-
-
-e = Evolver(2, 1)
-e.test()
+e = Evolver(2, 1, gen_size=500)
+for i in range(10):
+    e.run_generation()

@@ -1,5 +1,5 @@
 class Interpreter:
-    def __init__(self, human_mode=False):
+    def __init__(self, max_life_span=1000, human_mode=False):
         self.command_pointer = 0
         self.cell_pointer = 0
 
@@ -11,6 +11,7 @@ class Interpreter:
         self.commands = '>', '<', '?', '+', '-', '=', ':', '(', ')', '*', '^', '!', '%', '$', '[', ']'
 
         self.life_span = 0
+        self.max_life_span = max_life_span
         self.output = []
         self.input = []
 
@@ -131,10 +132,9 @@ class Interpreter:
     def run(self):
         self.reset()
         while self.command_pointer < len(self.stream):
-            if self.life_span < 1000:
+            if self.life_span < self.max_life_span:
                 self.step()
             else:
-                # print("Lifespan exceeded, terminating")
                 break
 
     def search_arg(self):
@@ -176,7 +176,10 @@ class Interpreter:
         if inps:
             self.input = list((inp,) + inps)
         else:
-            self.input = [inp]
+            if type(inp) == list:
+                self.input = inp
+            else:
+                self.input = [inp]
 
     def request_input(self):
         if self.human_mode:

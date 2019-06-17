@@ -1,13 +1,12 @@
 import interpreter
 
 code = '''
-%^>%+!$
+?^<2B%%+>$<<D6
 '''
 
-i = interpreter.Interpreter(True)
+i = interpreter.Interpreter(human_mode=True)
 i.load(code)
-print(i.num_inputs, i.num_outputs)
-i.set_input(1)
+# print(i.num_inputs, i.num_outputs)
 i.run()
 i.dump_output()
 
