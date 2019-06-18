@@ -66,40 +66,50 @@ class Evolver:
 
         self.individuals = self.generations[self.current_gen]
 
-
+        gen_high = ''
+        gen_score = 0
         for i in self.individuals:  # testing individuals to determine fitness
             total_error = 0
+            infinite_loop = False
+
+            # runs test only individuals with proper # io
             if i.num_inputs == self.desired_inputs and i.num_outputs == self.desired_outputs:
                 for j in range(self.trials_per_individual):
                     inp = [random.randint(0, 100) for x in range(2)]
-                    exp_out = inp[0] + inp[1]
+                    exp_out = 300
                     self.interpreter.set_input(inp)
                     self.interpreter.load(i.stream)
-                    self.interpreter.run()
-                    calc_out = self.interpreter.dequeue_output()
-                    try:
-                        error = abs(calc_out - exp_out)
-                    except TypeError:
-                        print(i.stream, calc_out)
-                        self.interpreter.dump_output()
-                        input()
+                    if self.interpreter.run():  # returns false if infinite loop broken
+                        calc_out = self.interpreter.dequeue_output()
+                        try:
+                            error = abs(calc_out - exp_out)
+                        except TypeError:
+                            infinite_loop = True
+                            break
+                    else:
+                        infinite_loop = True
                         break
 
-
                     total_error += error
-                avg_error = total_error / self.trials_per_individual
-                fitness = self.max_fitness / (avg_error + 1)
 
-                print(f'Error: {avg_error} F: {fitness}   Stream: {i.stream}')
+                if infinite_loop:  # forcibly terminated programs removed from gene pool
+                    i.fitness = 0
+                else:  # calculates fitness based on average error
+                    avg_error = total_error / self.trials_per_individual
+                    fitness = self.max_fitness / (avg_error + 1)
+                    i.fitness = fitness
 
-                num_des_io += 1
+                if i.fitness > gen_score:
+                    gen_high = i.stream
+                    gen_score = i.fitness
 
-            total_fitness += i.fitness
+                num_des_io += 1  # counts # individuals with desired io
+            total_fitness += i.fitness  # for calculating avg fitness / generation
 
         # math for displayed stats
         per_des_io = num_des_io / self.gen_size * 100
         avg_fitness = total_fitness / self.gen_size
-        print(f"Generation {self.current_gen} {str(round(per_des_io, 2))}%   Avg. Fitness: {round(avg_fitness, 2)}")
+        print(f"Generation {self.current_gen} {str(round(per_des_io, 2))}%   Avg. Fitness: {round(avg_fitness, 2)}   Highest: {round(gen_score, 2)}  {gen_high}")
 
         self.current_gen += 1
         self.generations.append([])
@@ -133,6 +143,6 @@ class Individual:
         self.fitness = 1 / (io_diff + 1)
 
 
-e = Evolver(2, 1, gen_size=500)
-for i in range(10):
+e = Evolver(0, 1, gen_size=1000, limit=(10, 20))
+for i in range(100):
     e.run_generation()

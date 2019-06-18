@@ -1,7 +1,7 @@
 import interpreter
 
 code = '''
-%3%[]=7$^=?
+<]+3^]$A?0>]+]F3^
 '''
 
 i = interpreter.Interpreter(human_mode=True)

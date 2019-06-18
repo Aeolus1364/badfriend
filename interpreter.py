@@ -135,7 +135,8 @@ class Interpreter:
             if self.life_span < self.max_life_span:
                 self.step()
             else:
-                break
+                return False
+        return True
 
     def search_arg(self):
         next = self.next_in_stream()
